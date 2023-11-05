@@ -1,0 +1,119 @@
+#Creator: Rishi Shah, Cornell University
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, mean_absolute_error, accuracy_score
+from sklearn import preprocessing
+from sklearn.metrics import r2_score
+from sklearn.linear_model import LogisticRegression
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
+
+
+df = pd.read_csv("/Users/rishishah/Downloads/archive/diabetes_012_health_indicators_BRFSS2015.csv")
+#print(df) # note: this is the CSV file where Diabetes_012 has 0 for no-diabetes, 1 for pre-diabetes, and 2 for diabetes
+
+#Start w/ Logistic Regression
+
+new_df = df.copy()
+new_df.loc[new_df['Diabetes_012'] == 1, 'Diabetes_01'] = 0 #only change if pre-diabetes to no diabetes (for binary)
+new_df.loc[new_df['Diabetes_012'] == 2, 'Diabetes_01'] = 2 #keep same if diabetes
+new_df.loc[new_df['Diabetes_012'] == 0, 'Diabetes_01'] = 0 #keep same if no diabetes
+
+
+#print(new_df['Diabetes_012'].tail(50))
+#print(new_df['Diabetes_01'].tail(50)) --> code works
+
+new_df = new_df.drop("Diabetes_012", axis='columns') #Diabetes_01 is the new column we want to predict
+
+
+'''''''''
+#Note: Major problem with logistic regression --> there are almost 7 times as many non-diabetics (0) as diabetics (1)
+#As such, can just guess non-diabetic (0) for all cases and have around 85% accuracy
+
+Counter0 = 0
+Counter1 = 0
+for i in new_df['Diabetes_01']:
+    if (i == 0):
+        Counter0+=1
+    else:
+        Counter1+=1
+print(Counter0) --> 218334
+print(Counter1) --> 35346
+'''
+df_list = []
+
+for i in range (0, 10): #I want to find mean of 10 results, in order to limit sample-dependence due to high variation between runs
+    for feature_name in new_df.columns:
+        # we separate X (features) and income Y (target)
+        if (feature_name == 'Diabetes_01'):
+            continue
+        logX = new_df[[feature_name]]
+        logY = new_df['Diabetes_01']
+
+        # TODO: train test split your data with 20% being used for testing
+        logX_train, logX_test, logY_train, logY_test = train_test_split(logX, logY, test_size=0.2)
+
+        # This is the function we use to create the logistic regression model (default k=5)
+        model = LogisticRegression()
+
+        #Tit the model using the train data
+        model.fit(logX_train, logY_train)
+
+        # Store the predictions for the training and test set
+        pred_train = model.predict(logX_train)
+        pred_test = model.predict(logX_test)
+
+        training_accuracy = accuracy_score(logY_train, pred_train)
+        testing_accuracy = accuracy_score(logY_test, pred_test)
+
+        # Create a DataFrame for the current feature's results
+        feature_results = pd.DataFrame({'Feature Name': [feature_name],
+                                        'Training Accuracy': [training_accuracy],
+                                        'Testing Accuracy': [testing_accuracy]})
+
+        df_list.append(feature_results)
+        
+fin_df = pd.concat(df_list) #concates all of the dataframes -- now has length of 210, with each feature being found in 10 results
+
+# Group by 'Feature Name' (e.g., all the HighChol values are together), and calculate the mean testing accuracy wtihin each group (down to just our 21 features again)
+grouped = fin_df.groupby('Feature Name').mean().reset_index()
+
+# Sort the grouped dataframe by mean testing accuracy in descending order
+sorted_df = grouped.sort_values(by='Testing Accuracy', ascending=False)
+
+print(sorted_df)
+
+'''''''''
+Results: 
+/bin/python /Users/rishishah/PycharmProjects/INFO_1998_Final_Project/venv/Final_Code.py 
+            Feature Name  Training Accuracy  Testing Accuracy
+8   HeartDiseaseorAttack           0.860414          0.861678
+10              HighChol           0.860501          0.861329
+4               DiffWalk           0.860506          0.861310
+11     HvyAlcoholConsump           0.860532          0.861205
+9                 HighBP           0.860583          0.861002
+20               Veggies           0.860584          0.861000
+13              MentHlth           0.860609          0.860900
+7                GenHlth           0.860618          0.860864
+0                    Age           0.860618          0.860864
+18                Smoker           0.860623          0.860842
+1          AnyHealthcare           0.860626          0.860833
+16              PhysHlth           0.860632          0.860805
+3              CholCheck           0.860650          0.860736
+12                Income           0.860655          0.860714
+15          PhysActivity           0.860704          0.860517
+17                   Sex           0.860710          0.860496
+14           NoDocbcCost           0.860736          0.860391
+19                Stroke           0.860740          0.860375
+6                 Fruits           0.860804          0.860117
+5              Education           0.860917          0.859668
+2                    BMI           0.857975          0.858249
+
+#Note: all predictions are consistently around 85% accuracy as predicted
+#Still variation in between runs of this program, but it seems BMI is consistently the worst feature for prediction.
+'''''
