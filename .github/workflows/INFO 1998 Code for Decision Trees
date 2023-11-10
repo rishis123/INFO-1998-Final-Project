@@ -1,1 +1,106 @@
 
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, mean_absolute_error, accuracy_score
+from sklearn import preprocessing
+from sklearn.metrics import r2_score
+from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn import tree
+from sklearn import datasets
+from sklearn.preprocessing import LabelEncoder
+from sklearn.model_selection import KFold
+
+df = pd.read_csv("/Users/rishishah/Downloads/archive/diabetes_012_health_indicators_BRFSS2015.csv")
+#print(df) # note: this is the CSV file where Diabetes_012 has 0 for no-diabetes, 1 for pre-diabetes, and 2 for diabetes
+
+X = df.drop("Diabetes_012", axis='columns')  # Features
+Y = df['Diabetes_012']  # Target variable
+#Test-train split our data (note we are using 0,1,2 diabetes classification unlike logistic regression
+X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=1998)
+
+best_depth = 1  # Keep track of depth that produces tree with highest accuracy
+best_accuracy = 0  # The best accuracy from a given tree
+for k in range(1, 60):
+    #Create and fit a model of depth k --> want to find best depth so iterate over 1 to 59
+    model = tree.DecisionTreeClassifier(max_depth=k)
+
+    model.fit(X_train, Y_train)
+
+    # TODO store the predictions for the test set
+    pred_test = model.predict(X_test)
+
+    # Find the accuracy of the model's predictions (pred_test)
+    # compared to the actual samples, and score the accuracy in acc_test.
+    acc_test = accuracy_score(Y_test, pred_test)
+
+    # Compare the accuracy found with the best current depth/accuracy found and update if necessary
+
+    if best_accuracy < acc_test:
+        best_accuracy = acc_test
+        best_depth = k
+
+#print(best_accuracy)
+#print(best_depth) --> console results: 5, but can change from run to next (store best_depth as variable and use for cross validation)
+'''''''''''
+Yielded 
+best_accuracy = 0.8487464522232734, but can change from run to next
+best_depth = 5, but can change from run to next (store best_depth as variable and use for cross validation)
+'''
+
+
+#We use 5-fold cross validation to yield average accuracy at our best depth
+kf = KFold(n_splits = 5) # number of folds -- default value
+totAccuracy = 0
+
+# Optimal model creation
+model = tree.DecisionTreeClassifier(max_depth=best_depth)  # using the best_depth from previous part
+# store model outside for space storage within cross-validation, as well as for feature importance below
+
+
+
+for train_index, test_index in kf.split(X): # within incX, we split into our train and test data based on our desired folds
+    # TODO: define X_train, X_test, Y_train, Y_test
+    X_train = X.iloc[train_index]
+    Y_train = Y.iloc[train_index] # want same corresponding training indices
+    X_test = X.iloc[test_index]
+    Y_test = Y.iloc[test_index] # same for testing
+
+    #Fit model
+    model.fit(X_train, Y_train)
+
+    # Yield Accuracy score, add to totAccuracy (sum of all folds' accuracy)
+    accuracyEach = accuracy_score(Y_test, model.predict(X_test))
+    totAccuracy += accuracyEach
+avgAccuracy = totAccuracy / 5 # average accuracy across all folds
+print(avgAccuracy)
+
+'''''''''
+Yielded
+0.8475126143172501 as average accuracy across all 5 folds
+'''
+
+# Get feature importances
+feature_importances = model.feature_importances_
+
+# Map feature names to their importance scores
+feature_importance_dict = dict(zip(X.columns, feature_importances))
+
+# Sort features by importance in descending order
+sorted_features = sorted(feature_importance_dict.items(), key=lambda x: x[1], reverse=True)
+
+print(sorted_features) # yields weights of each feature, summing to 1
+
+''''''''''
+Printed Results
+
+[('HighBP', 0.42411837240442285), ('GenHlth', 0.3136092231160812), ('BMI', 0.12904891753788347), ('HighChol', 0.09103279391261676), ('Age', 0.03963281097211987), ('DiffWalk', 0.002557882056875699), ('CholCheck', 0.0), ('Smoker', 0.0), ('Stroke', 0.0), ('HeartDiseaseorAttack', 0.0), ('PhysActivity', 0.0), ('Fruits', 0.0), ('Veggies', 0.0), ('HvyAlcoholConsump', 0.0), ('AnyHealthcare', 0.0), ('NoDocbcCost', 0.0), ('MentHlth', 0.0), ('PhysHlth', 0.0), ('Sex', 0.0), ('Education', 0.0), ('Income', 0.0)]
+
+Can display this (or whatever result is ultimately yielded in JupyterNotebooks) in scatterplot
+'''
+
