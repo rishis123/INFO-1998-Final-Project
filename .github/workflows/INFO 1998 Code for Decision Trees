@@ -97,11 +97,13 @@ sorted_features = sorted(feature_importance_dict.items(), key=lambda x: x[1], re
 
 print(sorted_features) # yields weights of each feature, summing to 1
 
-''''''''''
-Printed Results
+#For visualization's sake, we can now unzip the sorted dictionary into each feature's name and importance
+feature_names, importances = zip(*sorted_features)
 
-[('HighBP', 0.42411837240442285), ('GenHlth', 0.3136092231160812), ('BMI', 0.12904891753788347), ('HighChol', 0.09103279391261676), ('Age', 0.03963281097211987), ('DiffWalk', 0.002557882056875699), ('CholCheck', 0.0), ('Smoker', 0.0), ('Stroke', 0.0), ('HeartDiseaseorAttack', 0.0), ('PhysActivity', 0.0), ('Fruits', 0.0), ('Veggies', 0.0), ('HvyAlcoholConsump', 0.0), ('AnyHealthcare', 0.0), ('NoDocbcCost', 0.0), ('MentHlth', 0.0), ('PhysHlth', 0.0), ('Sex', 0.0), ('Education', 0.0), ('Income', 0.0)]
-
-Can display this (or whatever result is ultimately yielded in JupyterNotebooks) in scatterplot
-'''
-
+# Plotting each feature by importance in a bar-graph
+plt.figure(figsize=(10, 6))
+plt.barh(range(len(feature_names)), importances, align='center') #plot each bar -- each feature's names with corresponding importance
+plt.yticks(range(len(feature_names)), feature_names) #names each bar with feature's name
+plt.xlabel('Feature Importance')
+plt.title("Decision Trees' Relative Feature Importance for Diabetes Diagnosis prediction")
+plt.show()
