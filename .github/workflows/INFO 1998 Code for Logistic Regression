@@ -1,5 +1,4 @@
 #Creator: Rishi Shah, Cornell University
-
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -10,8 +9,7 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error, accuracy_sc
 from sklearn import preprocessing
 from sklearn.metrics import r2_score
 from sklearn.linear_model import LogisticRegression
-import warnings
-warnings.simplefilter(action='ignore', category=FutureWarning)
+from sklearn.preprocessing import StandardScaler
 
 
 df = pd.read_csv("/Users/rishishah/Downloads/archive/diabetes_012_health_indicators_BRFSS2015.csv")
@@ -45,75 +43,42 @@ for i in new_df['Diabetes_01']:
 print(Counter0) --> 218334
 print(Counter1) --> 35346
 '''
-df_list = []
 
-for i in range (0, 10): #I want to find mean of 10 results, in order to limit sample-dependence due to high variation between runs
-    for feature_name in new_df.columns:
-        # we separate X (features) and income Y (target)
-        if (feature_name == 'Diabetes_01'):
-            continue
-        logX = new_df[[feature_name]]
-        logY = new_df['Diabetes_01']
+X = new_df.drop("Diabetes_01", axis='columns') #dataframe of features (don't want Diabetes_01 itself)
+Y = new_df['Diabetes_01']
 
-        # TODO: train test split your data with 20% being used for testing
-        logX_train, logX_test, logY_train, logY_test = train_test_split(logX, logY, test_size=0.2)
 
-        # This is the function we use to create the logistic regression model (default k=5)
-        model = LogisticRegression()
+# Scale features to deal with no.of iterations limit error
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)# this yields an array
+X = pd.DataFrame(X_scaled, columns=X.columns) #convert back to dataframe
 
-        #Tit the model using the train data
-        model.fit(logX_train, logY_train)
 
-        # Store the predictions for the training and test set
-        pred_train = model.predict(logX_train)
-        pred_test = model.predict(logX_test)
+accuracyVal = 0
 
-        training_accuracy = accuracy_score(logY_train, pred_train)
-        testing_accuracy = accuracy_score(logY_test, pred_test)
+tot_coeffs = np.zeros(len(X.columns)) #populates array with zeros, equal in length to number of columns in feature dataframe
 
-        # Create a DataFrame for the current feature's results
-        feature_results = pd.DataFrame({'Feature Name': [feature_name],
-                                        'Training Accuracy': [training_accuracy],
-                                        'Testing Accuracy': [testing_accuracy]})
+#Take average of bunch of trials to get average results
+for i in range (0,10):
+    X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=1998)
 
-        df_list.append(feature_results)
-        
-fin_df = pd.concat(df_list) #concates all of the dataframes -- now has length of 210, with each feature being found in 10 results
+    #Create model
+    model = LogisticRegression()
+    model.fit(X_train, Y_train)
+    Y_pred = model.predict(X_test)
+    accuracyVal += accuracy_score(Y_test,Y_pred)
+    coefficients = model.coef_[0] #array of each coefficient's weight
+    tot_coeffs += coefficients
 
-# Group by 'Feature Name' (e.g., all the HighChol values are together), and calculate the mean testing accuracy wtihin each group (down to just our 21 features again)
-grouped = fin_df.groupby('Feature Name').mean().reset_index()
+tot_coeffs = tot_coeffs/10 #divide coefficients over 10 iterations
+accuracyVal = accuracyVal/10 #divide accuracy score over 10 iterations
+feature_weights = pd.DataFrame({'Feature': X.columns, 'Coefficient': tot_coeffs})
+sorted_feature_weights = feature_weights.sort_values(by='Coefficient', ascending=False)
 
-# Sort the grouped dataframe by mean testing accuracy in descending order
-sorted_df = grouped.sort_values(by='Testing Accuracy', ascending=False)
+print(sorted_feature_weights)
+print(accuracyVal)
 
-print(sorted_df)
+#TODO: VISUALIZATION
 
-'''''''''
-Results: 
-/bin/python /Users/rishishah/PycharmProjects/INFO_1998_Final_Project/venv/Final_Code.py 
-            Feature Name  Training Accuracy  Testing Accuracy
-8   HeartDiseaseorAttack           0.860414          0.861678
-10              HighChol           0.860501          0.861329
-4               DiffWalk           0.860506          0.861310
-11     HvyAlcoholConsump           0.860532          0.861205
-9                 HighBP           0.860583          0.861002
-20               Veggies           0.860584          0.861000
-13              MentHlth           0.860609          0.860900
-7                GenHlth           0.860618          0.860864
-0                    Age           0.860618          0.860864
-18                Smoker           0.860623          0.860842
-1          AnyHealthcare           0.860626          0.860833
-16              PhysHlth           0.860632          0.860805
-3              CholCheck           0.860650          0.860736
-12                Income           0.860655          0.860714
-15          PhysActivity           0.860704          0.860517
-17                   Sex           0.860710          0.860496
-14           NoDocbcCost           0.860736          0.860391
-19                Stroke           0.860740          0.860375
-6                 Fruits           0.860804          0.860117
-5              Education           0.860917          0.859668
-2                    BMI           0.857975          0.858249
 
-#Note: all predictions are consistently around 85% accuracy as predicted
-#Still variation in between runs of this program, but it seems BMI is consistently the worst feature for prediction.
-'''''
+
