@@ -1,0 +1,61 @@
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+import seaborn as sns
+from sklearn import datasets
+
+df = pd.read_csv("diabetes_012_health_indicators_BRFSS2015.csv")
+features = df[["HighBP", "GenHlth", "BMI", "HighChol", "Age", "DiffWalk"]]
+goal = (df["Diabetes_012"] == 1) | (df["Diabetes_012"] == 2)
+
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.model_selection import KFold
+from sklearn.metrics import confusion_matrix
+from contextlib import suppress
+
+accuracies, positive_predictive_values, negative_predictive_values = [],[],[]
+n_folds = 10
+kf = KFold(n_folds)
+for train_index, test_index in kf.split(features):
+    X_train, X_test = features.iloc[train_index], features.iloc[test_index]
+    y_train, y_test = goal[train_index], goal[test_index]
+#         # Count the number of samples in each class
+#     class_counts = {label: np.sum(y_train == label) for label in set(y_train)}
+
+#     # Determine the minimum number of samples
+#     min_samples = min(class_counts.values())
+
+#     # Create balanced sample sets
+#     balanced_indices = []
+#     for label in set(y_train):
+#         label_indices = np.where(y_train == label)[0]
+#         sampled_indices = np.random.choice(label_indices, min_samples, replace=False)
+#         balanced_indices.extend(sampled_indices)
+
+#     # Use the balanced indices to create a new balanced training set
+#     X_train_balanced = X_train.iloc[balanced_indices]
+#     y_train_balanced = y_train.iloc[balanced_indices]
+    
+    tree = DecisionTreeClassifier()
+    tree.fit(X_train, y_train)
+#     tree.fit(X_train_balanced, y_train_balanced)
+    pred = tree.predict(X_test)
+    
+    #true negative, false positive, false negative, true positive
+    tn, fp, fn, tp = confusion_matrix(y_test, pred, labels=[False,True]).ravel()
+    
+    accuracies.append((tn + tp) / len(y_test))
+    if tp + fn > 0:
+        positive_predictive_values.append(tp / (tp + fn))
+    if tn + fp > 0:
+        negative_predictive_values.append(tn / (tn + fp))
+    
+cv_accuracy = np.mean(accuracies)
+
+print("Accuracy:", cv_accuracy)
+
+cv_positive_predictive_value = np.mean(positive_predictive_values)
+cv_negative_predictive_value = np.mean(negative_predictive_values)
+
+print("accuracy for positive samples",  cv_positive_predictive_value)
+print("accuracy for negative samples", cv_negative_predictive_value)
