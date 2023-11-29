@@ -1,0 +1,94 @@
+@Creator: Rishi Shah, Cornell University
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error, mean_absolute_error, accuracy_score, r2_score
+from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.model_selection import KFold
+from sklearn import svm
+
+
+
+df = pd.read_csv("/Users/rishishah/Downloads/archive/diabetes_012_health_indicators_BRFSS2015.csv")
+X = df.drop("Diabetes_012", axis='columns')  # Features
+Y = df['Diabetes_012']  # Target variable -- note we will be using multiclass SVM to account for all 3 classes (0, 1, or 2 value)
+
+
+#We first scale data, to better interpret coef_ values from linear kernel
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)# this yields an array
+X = pd.DataFrame(X_scaled, columns=X.columns) #convert back to dataframe
+
+
+#Massive 250,000 values in dataset -- very slow runtime. Take first 100,000 for application (reinitialize x and y-values, although note x and y now represent respective subsets)
+
+#Linear SVM
+
+X = X.sample(n=100000, random_state=42)
+Y = Y.sample(n=100000, random_state=42)
+
+
+X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=1998)
+
+linear_svc = svm.SVC(kernel='linear')
+linear_svc.fit(X_train, Y_train)
+Y_pred_linear = linear_svc.predict(X_test)
+print('Accuracy Score of Linear Kernel: ', accuracy_score(Y_test, Y_pred_linear))
+
+#Fof first possible class (class_label =0 ) -> i.e. coefficient weights for no diabetes group
+class_label = 0
+class_coeffs0 = linear_svc.coef_[class_label]
+
+# Create a DataFrame with feature names and corresponding coefficients (importances of each feature variable in classification by hyperplane0
+coefficients_df0 = pd.DataFrame(class_coeffs0, index=X.columns, columns=['Coefficient Value'])
+
+# Plot a segmented bar graph
+fig0, ax0 = plt.subplots(figsize=(10, 6))
+coefficients_df0.plot(kind='barh', ax=ax0, width=0.8)
+
+# Set plot labels and title
+ax0.set_xlabel('Coefficient Value')
+ax0.set_ylabel('Feature Name')
+ax0.set_title('Coefficients of Linear SVM Model for 0-class (no diabetes)')
+
+
+
+#For econd possible class (class_label = 1) -> i.e. coefficient weights for pre-diabetes group
+
+class_label = 1
+class_coeffs1 = linear_svc.coef_[class_label]
+
+# Create a DataFrame with feature names and corresponding coefficients (importances of each feature variable in classification by hyperplane0
+coefficients_df1 = pd.DataFrame(class_coeffs1, index=X.columns, columns=['Coefficient Value'])
+
+# Plot a segmented bar graph
+fig1, ax1 = plt.subplots(figsize=(10, 6))
+coefficients_df1.plot(kind='barh', ax=ax1, width=0.8)
+
+# Set plot labels and title
+ax1.set_xlabel('Coefficient Value')
+ax1.set_ylabel('Feature Name')
+ax1.set_title('Coefficients of Linear SVM Model for 1-class (pre diabetes)')
+
+#For third possible class (class_label = 2) -> i.e. coefficient weights for  diabetes group
+
+class_label = 2
+class_coeffs2 = linear_svc.coef_[class_label]
+
+# Create a DataFrame with feature names and corresponding coefficients (importances of each feature variable in classification by hyperplane0
+coefficients_df2 = pd.DataFrame(class_coeffs2, index=X.columns, columns=['Coefficient Value'])
+
+# Plot a segmented bar graph
+fig2, ax2 = plt.subplots(figsize=(10, 6))
+coefficients_df2.plot(kind='barh', ax=ax2, width=0.8)
+
+# Set plot labels and title
+ax2.set_xlabel('Coefficient Value')
+ax2.set_ylabel('Feature Name')
+ax2.set_title('Coefficients of Linear SVM Model for 2-class (yes diabetes)')
+
+# Show all 3 plots
+plt.show()
+
