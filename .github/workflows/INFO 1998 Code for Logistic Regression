@@ -1,4 +1,4 @@
-#Creator: Rishi Shah, Cornell University
+@Creator: Rishi Shah, Cornell University
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -47,7 +47,6 @@ print(Counter1) --> 35346
 X = new_df.drop("Diabetes_01", axis='columns') #dataframe of features (don't want Diabetes_01 itself)
 Y = new_df['Diabetes_01']
 
-
 # Scale features to deal with no.of iterations limit error
 scaler = StandardScaler()
 X_scaled = scaler.fit_transform(X)# this yields an array
@@ -75,10 +74,22 @@ accuracyVal = accuracyVal/10 #divide accuracy score over 10 iterations
 feature_weights = pd.DataFrame({'Feature': X.columns, 'Coefficient': tot_coeffs})
 sorted_feature_weights = feature_weights.sort_values(by='Coefficient', ascending=False)
 
-print(sorted_feature_weights)
-print(accuracyVal)
+#VISUALIZATION
 
-#TODO: VISUALIZATION
+
+fig0, ax0 = plt.subplots(figsize=(10, 6))
+sorted_feature_weights.plot(kind='barh', ax=ax0, width=0.8)
+
+# Set plot labels and title
+ax0.set_xlabel('Feature Weight')
+ax0.set_ylabel('Feature Name')
+ax0.set_title('Feature Weights of Logistic Regression Model for Diabetes Risk Factors')
+
+#Solution to ticks showing up as numbers corresponding with features rather than the names themselves
+ax0.set_yticklabels(sorted_feature_weights['Feature'])
+
+plt.show()
+print("Accuracy Score of Logistic Regression:", accuracyVal)
 
 
 
