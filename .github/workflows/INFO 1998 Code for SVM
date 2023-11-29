@@ -35,19 +35,11 @@ def classifier_accuracy(classifier, features, goal, n_training_points, n_testing
         goal = goal[indices]
     
     test_size = n_testing_points / n_total_points
-    
-    ###############################################################################
-    ##### Don't touch anything in this cell above this line! Only add code below.
-    ###############################################################################
-    
-    #FILL HERE: Make a train test split with a test size of test_size
+
     X_train, X_test, y_train, y_test = train_test_split(features, goal, test_size = test_size)
 
-    #FILL HERE: train the classifier
     classifier.fit(X_train, y_train)
 
-
-    #FILL HERE: Compute your model's train and test accuracy using accuracy_score
     pred_train = classifier.predict(X_train)
     pred_test = classifier.predict(X_test) 
     train_accuracy = accuracy_score(y_train, pred_train)
