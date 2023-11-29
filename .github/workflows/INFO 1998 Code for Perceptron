@@ -1,57 +1,27 @@
+#Creator: Ethan Huang, Cornell University
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import Perceptron
 from sklearn.metrics import accuracy_score
 
-"""
-test_size: a float between 0 and 1 indicating the size of the train set
-"""
-def classifier_accuracy(classifier, features, goal, n_training_points, n_testing_points=None):
-    
-    if n_training_points > len(goal):
-        raise ValueError("bad input to classifier_accuracy: number of training points requested is greater than length of dataset")
-    if n_training_points <= 0:
-        raise ValueError("bad input to classifier_accuracy: number of training points requested must be greater than 0")
-    
-    if n_testing_points is None:
-        n_testing_points = len(goal) - n_training_points
-    
-    if n_testing_points > len(goal):
-        raise ValueError("bad input to classifier_accuracy: number of testing points requested is greater than length of dataset")
-    if n_testing_points < 0:
-        raise ValueError("bad input to classifier_accuracy: number of testing points requested must be greater than 0")
-    
-    if n_training_points + n_testing_points > len(goal):
-        raise ValueError("bad input to classifier_accuracy: number of training + testing points requested is greater than length of dataset")
-    
-    n_total_points = n_training_points + n_testing_points
-    
-    if n_training_points + n_testing_points < len(goal):
-        indices = np.random.choice(len(features), n_total_points)
-        features = features[indices,:]
-        goal = goal[indices]
-    
-    test_size = n_testing_points / n_total_points
-
-    X_train, X_test, y_train, y_test = train_test_split(features, goal, test_size = test_size)
-
-    classifier.fit(X_train, y_train)
-
-    pred_train = classifier.predict(X_train)
-    pred_test = classifier.predict(X_test) 
-    train_accuracy = accuracy_score(y_train, pred_train)
-    test_accuracy = accuracy_score(y_test, pred_test)
-    
-    return train_accuracy, test_accuracy 
-
-
 df = pd.read_csv("diabetes_012_health_indicators_BRFSS2015.csv")
 features = df[["HighBP", "GenHlth", "BMI", "HighChol", "Age", "DiffWalk"]]
-goal = (df["Diabetes_012"] == 1) | (df["Diabetes_012"] == 2)
-# we train on 400 of the ~500 data points, equivalent to 20% test set
-train, test = classifier_accuracy(Perceptron(), features, goal, 400) 
-print("train accuracy:\t", train)
-print("test accuracy:\t", test)
+goal = (df["Diabetes_012"] == 2)
+
+X_train, X_test, y_train, y_test = train_test_split(features, goal, test_size = 0.2, random_state = 42)
+
+#train the perceptron model
+model = Perceptron()
+
+model.fit(X_train, y_train)
+
+#Compute the train and test accuracy using accuracy_score
+pred_train = model.predict(X_train)
+pred_test = model.predict(X_test) 
+train_accuracy = accuracy_score(y_train, pred_train)
+test_accuracy = accuracy_score(y_test, pred_test)
+
+print("train accuracy:\t", train_accuracy)
+print("test accuracy:\t", test_accuracy)
