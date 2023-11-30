@@ -9,4 +9,4 @@ Our best models for accuracy were Perceptron and Logistic Regression. The most s
 
 Visualizations used -- Bar graphs, Pie Charts
 
-Please see the attached JupyterNotebook for pre-run results, visualizations and some notes/comments.
+Please see the attached JupyterNotebook, entitled "INFO 1998 Final Project.ipynb" for pre-run results, visualizations and some notes/comments.
