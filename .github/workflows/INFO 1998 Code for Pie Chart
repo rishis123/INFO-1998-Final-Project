@@ -1,0 +1,25 @@
+@Creator: Ethan Huang, Cornell University
+import matplotlib.pyplot as plt
+
+# Create a list of all the factors that we want a pie chart for
+factors = ["HighBP", "HighChol", "Smoker", "PhysActivity", "Fruits", "Veggies"]
+
+# Iterate through the list
+for factor in factors:
+    # We find the value counts for when the factor is 1 and when the factor is 0 
+    # We replace instances of pre-diabetes as no diabetes to maintain similarity with the models
+    with_factor = df[df[factor] == 1]['Diabetes_012'].replace({1: 0}).value_counts() 
+    without_factor = df[df[factor] == 0]['Diabetes_012'].replace({1:0}).value_counts()
+    
+    # Create two subplots that compare the presence of diabetes in people with/without certain health factors
+    _, (ax1, ax2) = plt.subplots(1, 2)
+
+    ax1.pie(with_factor,colors = ['g', 'r'], autopct='%1.1f%%', shadow = True)
+    ax1.legend(['No Diabetes', 'Diabetes'], loc = 2)
+    ax1.set_title('People with ' + factors[i])
+
+    ax2.pie(without_factor, colors = ['g', 'r'], autopct='%1.1f%%', shadow = True)
+    ax1.legend(['No Diabetes', 'Diabetes'], loc = 2)
+    ax2.set_title('People without ' + factors[i])
+
+    plt.show()
