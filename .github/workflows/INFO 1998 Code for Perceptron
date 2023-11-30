@@ -6,22 +6,32 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import Perceptron
 from sklearn.metrics import accuracy_score
 
+# Read the dataset 
 df = pd.read_csv("diabetes_012_health_indicators_BRFSS2015.csv")
+
+# Chosen features with higher importance as seen in Decision Tree code
 features = df[["HighBP", "GenHlth", "BMI", "HighChol", "Age", "DiffWalk"]]
-goal = (df["Diabetes_012"] == 2)
+
+# sets up target to be a binary classification for perceptron
+goal = (df["Diabetes_012"] == 2)  # 0 and 1 are False, while 2 is True
+
+# Perceptron
 
 X_train, X_test, y_train, y_test = train_test_split(features, goal, test_size = 0.2, random_state = 42)
 
-#train the perceptron model
 model = Perceptron()
 
+# Train the perceptron model
 model.fit(X_train, y_train)
 
-#Compute the train and test accuracy using accuracy_score
+# Make predictions on both training and testing sets
 pred_train = model.predict(X_train)
 pred_test = model.predict(X_test) 
+
+# Compute the train and test accuracy using accuracy_score
 train_accuracy = accuracy_score(y_train, pred_train)
 test_accuracy = accuracy_score(y_test, pred_test)
 
+# Output the accuracy scores
 print("train accuracy:\t", train_accuracy)
 print("test accuracy:\t", test_accuracy)
