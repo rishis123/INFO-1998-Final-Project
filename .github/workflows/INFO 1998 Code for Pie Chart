@@ -19,7 +19,7 @@ for factor in factors:
     ax1.set_title('People with ' + factors[i])
 
     ax2.pie(without_factor, colors = ['g', 'r'], autopct='%1.1f%%', shadow = True)
-    ax1.legend(['No Diabetes', 'Diabetes'], loc = 2)
+    ax2.legend(['No Diabetes', 'Diabetes'], loc = 2)
     ax2.set_title('People without ' + factors[i])
 
     plt.show()
